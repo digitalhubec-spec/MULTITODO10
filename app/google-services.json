@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "841727471444",
+    "project_id": "multitodo-1a606",
+    "storage_bucket": "multitodo-1a606.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:841727471444:android:3baf2d9e3af3210adb62c1",
+        "android_client_info": {
+          "package_name": "com.multitodo.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "841727471444-4jvsrej8065gidr1u6tarahol3e31u7d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.multitodo.app",
+            "certificate_hash": "309f0f7487e70262f9457c52428670c5127ab67a"
+          }
+        },
+        {
+          "client_id": "841727471444-0i8n2hokea26c454ghdua0e0hqt43kn8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP3jhjR6MezA3ZQij3Qcha0JPpyPdDnVg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "841727471444-0i8n2hokea26c454ghdua0e0hqt43kn8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
