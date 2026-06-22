@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
@@ -46,11 +47,25 @@ fun MultiStoreScreen(navController: NavController, cityName: String?) {
                 .whereArrayContains("ciudades", cityName)
                 .whereEqualTo("estado", "aprobado")
                 .whereEqualTo("categoria", "MULTISTORE")
+                .orderBy("orden", Query.Direction.ASCENDING)
                 .get()
                 .addOnSuccessListener { documents ->
                     businesses = documents.map { doc ->
                         doc.toObject<Formulario>().copy(id = doc.id)
                     }
+                }
+                .addOnFailureListener {
+                    // Reintento sin orden por si falta el índice compuesto en Firestore
+                    db.collection("formularios")
+                        .whereArrayContains("ciudades", cityName)
+                        .whereEqualTo("estado", "aprobado")
+                        .whereEqualTo("categoria", "MULTISTORE")
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            businesses = documents.map { doc ->
+                                doc.toObject<Formulario>().copy(id = doc.id)
+                            }
+                        }
                 }
         }
     }

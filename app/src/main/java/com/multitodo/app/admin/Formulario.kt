@@ -7,11 +7,12 @@ data class Formulario(
     var id: String = "",
     val nombre: String = "",
     val telefono: String = "",
-    val email: String = "", // Añadido
-    val slogan: String = "", // Añadido
+    val email: String = "",
+    val slogan: String = "",
     val categoria: String = "",
     val especialidad: String = "",
     val ciudades: List<String> = emptyList(),
+    val provincia: String = "", // Nueva propiedad para organizar por provincia
     val descripcion: String = "",
     val estado: String = "pendiente",
     val logoUrl: String = "",
@@ -20,6 +21,8 @@ data class Formulario(
     val tiktokLink: String = "",
     val facebookLink: String = "",
     val visitasTotales: Long = 0,
+    val orden: Int = 0,
+    val fechaAprobacion: Date? = null,
     @ServerTimestamp
     val timestamp: Date? = null
 )

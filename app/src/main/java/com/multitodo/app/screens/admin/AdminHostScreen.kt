@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,16 +26,23 @@ import com.multitodo.app.admin.AdminViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminHostScreen(navController: NavController, viewModel: AdminViewModel = viewModel()) {
-    var viewState by remember { mutableStateOf("pendiente") } // "pendiente" o "aprobado"
+    var viewState by remember { mutableStateOf("pendiente") } // "pendiente", "aprobado" o "recordatorios"
     var showMenu by remember { mutableStateOf(false) }
     
     val totalVisitas by viewModel.totalVisitasGlobales.collectAsState()
     val totalNegocios by viewModel.totalNegociosActivos.collectAsState()
 
+    val screenTitle = when(viewState) {
+        "pendiente" -> "Solicitudes Pendientes"
+        "aprobado" -> "Registros Aprobados"
+        "recordatorios" -> "Recordatorios de Tiempo"
+        else -> "Administración"
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (viewState == "pendiente") "Solicitudes Pendientes" else "Registros Aprobados") },
+                title = { Text(screenTitle) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -59,6 +67,15 @@ fun AdminHostScreen(navController: NavController, viewModel: AdminViewModel = vi
                                 showMenu = false
                             }
                         )
+                        DropdownMenuItem(
+                            text = { Text("Recordatorios") },
+                            leadingIcon = { Icon(Icons.Default.NotificationsActive, contentDescription = null, tint = Color(0xFFFFA000)) },
+                            onClick = { 
+                                viewState = "recordatorios"
+                                showMenu = false
+                            }
+                        )
+                        HorizontalDivider()
                         DropdownMenuItem(text = { Text("Cerrar Sesión") }, onClick = {
                             Firebase.auth.signOut()
                             navController.navigate("login") { popUpTo(0) }
@@ -70,8 +87,8 @@ fun AdminHostScreen(navController: NavController, viewModel: AdminViewModel = vi
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             
-            // --- PANEL DE ESTADÍSTICAS RÁPIDAS (Solo en vista de aprobados) ---
-            if (viewState == "aprobado") {
+            // --- PANEL DE ESTADÍSTICAS RÁPIDAS ---
+            if (viewState == "aprobado" || viewState == "recordatorios") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

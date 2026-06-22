@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.Date
 
 class AdminViewModel : ViewModel() {
 
@@ -33,9 +34,11 @@ class AdminViewModel : ViewModel() {
                     .get()
                     .await()
 
+                // Mapeamos y ordenamos por el campo 'orden'
                 val lista = snapshot.documents.mapNotNull { document ->
                     document.toObject(Formulario::class.java)?.copy(id = document.id)
-                }
+                }.sortedBy { it.orden } // Orden ascendente (0, 1, 2...)
+                
                 _formularios.value = lista
                 
                 // Si estamos viendo aprobados, calculamos totales
@@ -63,7 +66,12 @@ class AdminViewModel : ViewModel() {
     fun aprobarFormulario(id: String) {
         viewModelScope.launch {
             try {
-                db.collection("formularios").document(id).update("estado", "aprobado").await()
+                db.collection("formularios").document(id).update(
+                    mapOf(
+                        "estado" to "aprobado",
+                        "fechaAprobacion" to Date()
+                    )
+                ).await()
                 // Recargar para actualizar listas
                 cargarFormularios("pendiente")
             } catch (e: Exception) {

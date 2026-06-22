@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,6 +31,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.multitodo.app.composables.AppTopBar
+import com.multitodo.app.utils.EcuadorData
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.launch
 import java.util.*
@@ -43,11 +45,8 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
     val scope = rememberCoroutineScope()
 
     var fullName by remember { mutableStateOf("") }
-    var slogan by remember { mutableStateOf("") }
     var aboutMe by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
     var instagramLink by remember { mutableStateOf("") }
     var tiktokLink by remember { mutableStateOf("") }
     var facebookLink by remember { mutableStateOf("") }
@@ -57,14 +56,21 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
     var galleryUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isUploading by remember { mutableStateOf(false) }
 
-    val cities = listOf("MILAGRO", "GUAYAQUIL", "BABAHOYO")
-    val selectedCities = remember { mutableStateMapOf<String, Boolean>() }
+    // --- SECCIÓN DE UBICACIÓN ---
+    val mainCities = EcuadorData.ciudadesPrincipales
+    val selectedMainCities = remember { mutableStateMapOf<String, Boolean>() }
+    
+    var showOtherLocations by remember { mutableStateOf(false) }
+    var selectedProvincia by remember { mutableStateOf("") }
+    var selectedCiudadOther by remember { mutableStateOf("") }
+    
+    var provinciaExpanded by remember { mutableStateOf(false) }
+    var ciudadExpanded by remember { mutableStateOf(false) }
 
     // Lanzadores para seleccionar fotos
     val logoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         logoUri = uri
     }
-    // Limitamos a 5 fotos en el callback
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         galleryUris = uris.take(5) 
         if (uris.size > 5) {
@@ -94,27 +100,102 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
             ) {
                 item { Spacer(modifier = Modifier.height(8.dp)) }
 
-                // --- SECCIÓN DE CIUDADES ---
+                // --- SECCIÓN DE CIUDADES PRINCIPALES ---
                 item {
-                    Text("Selecciona las ciudades (Opcional):", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    cities.forEach { city ->
+                    Text("Selecciona las ciudades donde brindas servicio:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Ciudades Principales:", style = MaterialTheme.typography.titleSmall, color = Color.Gray)
+                    
+                    mainCities.forEach { city ->
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            Checkbox(checked = selectedCities[city] ?: false, onCheckedChange = { selectedCities[city] = it })
+                            Checkbox(checked = selectedMainCities[city] ?: false, onCheckedChange = { selectedMainCities[city] = it })
                             Text(city)
+                        }
+                    }
+                    
+                    TextButton(onClick = { showOtherLocations = !showOtherLocations }) {
+                        Text(if (showOtherLocations) "- Ocultar buscador de provincias" else "+ Buscar en otras provincias")
+                    }
+                }
+
+                if (showOtherLocations) {
+                    item {
+                        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Todas las provincias de Ecuador:", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            
+                            // Dropdown Provincia
+                            ExposedDropdownMenuBox(
+                                expanded = provinciaExpanded,
+                                onExpandedChange = { provinciaExpanded = !provinciaExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedProvincia,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Provincia") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = provinciaExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = provinciaExpanded,
+                                    onDismissRequest = { provinciaExpanded = false }
+                                ) {
+                                    EcuadorData.provincias.forEach { provincia ->
+                                        DropdownMenuItem(
+                                            text = { Text(provincia) },
+                                            onClick = {
+                                                selectedProvincia = provincia
+                                                selectedCiudadOther = ""
+                                                provinciaExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Dropdown Ciudad
+                            if (selectedProvincia.isNotBlank()) {
+                                ExposedDropdownMenuBox(
+                                    expanded = ciudadExpanded,
+                                    onExpandedChange = { ciudadExpanded = !ciudadExpanded }
+                                ) {
+                                    OutlinedTextField(
+                                        value = selectedCiudadOther,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Ciudad/Cantón") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ciudadExpanded) },
+                                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = ciudadExpanded,
+                                        onDismissRequest = { ciudadExpanded = false }
+                                    ) {
+                                        EcuadorData.ciudadesPorProvincia[selectedProvincia]?.forEach { ciudad ->
+                                            DropdownMenuItem(
+                                                text = { Text(ciudad) },
+                                                onClick = {
+                                                    selectedCiudadOther = ciudad
+                                                    ciudadExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
                 // --- DATOS BÁSICOS ---
                 item {
-                    OutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = { Text("Nombre del Negocio *") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = { Text("Nombre del Negocio o Profesional *") }, modifier = Modifier.fillMaxWidth())
                 }
 
-                // --- SECCIÓN DE LOGO ---
+                // --- LOGO Y GALERÍA ---
                 item {
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                         Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Logo del Negocio (Opcional)", fontWeight = FontWeight.Bold)
+                            Text("Logo o Foto de Perfil (Opcional)", fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(8.dp))
                             if (logoUri != null) {
                                 AsyncImage(model = logoUri, contentDescription = null, modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
@@ -122,17 +203,16 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                             Button(onClick = { logoLauncher.launch("image/*") }, modifier = Modifier.padding(top = 8.dp)) {
                                 Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(if (logoUri == null) "Seleccionar Logo" else "Cambiar Logo")
+                                Text(if (logoUri == null) "Seleccionar Foto" else "Cambiar Foto")
                             }
                         }
                     }
                 }
 
-                // --- SECCIÓN DE GALERÍA ---
                 item {
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Galería (Opcional, Máx 5)", fontWeight = FontWeight.Bold)
+                            Text("Galería de Trabajos (Opcional, Máx 5)", fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(8.dp))
                             if (galleryUris.isNotEmpty()) {
                                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -144,32 +224,40 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                             Button(onClick = { galleryLauncher.launch("image/*") }, modifier = Modifier.padding(top = 8.dp)) {
                                 Icon(Icons.Default.CloudUpload, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Añadir fotos a la galería")
+                                Text("Añadir fotos")
                             }
                         }
                     }
                 }
 
                 item {
-                    OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono *") }, modifier = Modifier.fillMaxWidth(), leadingIcon = { Text("+593") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
+                    OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono de Contacto *") }, modifier = Modifier.fillMaxWidth(), leadingIcon = { Text("+593") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
                 }
                 item {
-                    OutlinedTextField(value = aboutMe, onValueChange = { aboutMe = it }, label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth().height(120.dp))
+                    OutlinedTextField(value = aboutMe, onValueChange = { aboutMe = it }, label = { Text("Descripción de servicios") }, modifier = Modifier.fillMaxWidth().height(120.dp))
                 }
 
-                // --- REDES SOCIALES ---
                 item { Text("Redes Sociales (Opcional)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
-                item { OutlinedTextField(value = instagramLink, onValueChange = { instagramLink = it }, label = { Text("Instagram") }, modifier = Modifier.fillMaxWidth()) }
-                item { OutlinedTextField(value = tiktokLink, onValueChange = { tiktokLink = it }, label = { Text("TikTok") }, modifier = Modifier.fillMaxWidth()) }
-                item { OutlinedTextField(value = facebookLink, onValueChange = { facebookLink = it }, label = { Text("Facebook") }, modifier = Modifier.fillMaxWidth()) }
+                item { OutlinedTextField(value = instagramLink, onValueChange = { instagramLink = it }, label = { Text("Instagram (Usuario o Link)") }, modifier = Modifier.fillMaxWidth()) }
+                item { OutlinedTextField(value = tiktokLink, onValueChange = { tiktokLink = it }, label = { Text("TikTok (Usuario o Link)") }, modifier = Modifier.fillMaxWidth()) }
+                item { OutlinedTextField(value = facebookLink, onValueChange = { facebookLink = it }, label = { Text("Facebook (Link)") }, modifier = Modifier.fillMaxWidth()) }
 
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = {
-                            val citiesList = selectedCities.filter { it.value }.keys.toList()
+                            val citiesList = selectedMainCities.filter { it.value }.keys.toMutableList()
+                            if (selectedCiudadOther.isNotBlank()) {
+                                citiesList.add(selectedCiudadOther.uppercase())
+                            }
+
                             if (fullName.isBlank() || phone.isBlank()) {
                                 Toast.makeText(context, "Nombre y Teléfono son obligatorios", Toast.LENGTH_LONG).show()
+                                return@Button
+                            }
+                            
+                            if (citiesList.isEmpty()) {
+                                Toast.makeText(context, "Selecciona al menos una ciudad", Toast.LENGTH_LONG).show()
                                 return@Button
                             }
 
@@ -179,14 +267,12 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                                     val docId = UUID.randomUUID().toString()
                                     var logoUrl = ""
 
-                                    // 1. Subir Logo de forma segura
                                     if (logoUri != null) {
                                         val logoRef = storage.reference.child("logos/$docId")
                                         logoRef.putFile(logoUri!!).await()
                                         logoUrl = logoRef.downloadUrl.await().toString()
                                     }
 
-                                    // 2. Subir Galería (Hasta 5 fotos) de forma segura
                                     val galleryUrls = mutableListOf<String>()
                                     galleryUris.forEachIndexed { index, uri ->
                                         val ref = storage.reference.child("galerias/$docId/img_$index")
@@ -195,13 +281,13 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                                         galleryUrls.add(url)
                                     }
 
-                                    // 3. Guardar en Firestore
                                     val formSubmission = hashMapOf(
                                         "nombre" to fullName,
                                         "telefono" to phone,
                                         "categoria" to (category ?: "General"),
                                         "especialidad" to (specialty ?: ""),
                                         "ciudades" to citiesList,
+                                        "provincia" to selectedProvincia,
                                         "descripcion" to aboutMe,
                                         "estado" to "pendiente",
                                         "logoUrl" to logoUrl,
@@ -210,6 +296,7 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                                         "tiktokLink" to tiktokLink,
                                         "facebookLink" to facebookLink,
                                         "visitasTotales" to 0L,
+                                        "orden" to 0,
                                         "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp()
                                     )
 
@@ -218,7 +305,7 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                                     Toast.makeText(context, "¡Registro enviado! Revisaremos tu solicitud.", Toast.LENGTH_SHORT).show()
                                     navController.popBackStack()
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, "Error al subir fotos. Revisa tu conexión.", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "Error al subir datos.", Toast.LENGTH_LONG).show()
                                     e.printStackTrace()
                                 } finally {
                                     isUploading = false

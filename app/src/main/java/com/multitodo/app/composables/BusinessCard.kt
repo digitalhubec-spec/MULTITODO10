@@ -3,6 +3,7 @@ package com.multitodo.app.composables
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -110,12 +111,17 @@ fun BusinessCard(business: Formulario, modifier: Modifier = Modifier) {
                         favoritesManager.toggleFavorite(business.id)
                         isFavorite = favoritesManager.isFavorite(business.id)
                     },
-                    modifier = Modifier.align(Alignment.TopEnd)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(50))
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorito",
-                        tint = if (isFavorite) Color.Red else Color.White
+                        tint = if (isFavorite) Color.Red else Color.White,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

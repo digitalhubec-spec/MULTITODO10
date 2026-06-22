@@ -25,6 +25,8 @@ import com.multitodo.app.screens.LoginScreen
 import com.multitodo.app.screens.MainMenuScreen
 import com.multitodo.app.screens.MultiStoreScreen
 import com.multitodo.app.screens.ProfessionsScreen
+import com.multitodo.app.screens.ProvinceCityListScreen
+import com.multitodo.app.screens.ProvinceListScreen
 import com.multitodo.app.screens.RegisterScreen
 import com.multitodo.app.screens.SpecialtiesScreen
 import com.multitodo.app.screens.admin.AdminFormDetailScreen
@@ -90,6 +92,28 @@ class MainActivity : ComponentActivity() {
                             CityListScreen(
                                 navController = navController,
                                 categoryName = categoryName
+                            )
+                        }
+                        composable(
+                            "province_list/{categoryName}",
+                            arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            ProvinceListScreen(
+                                navController = navController,
+                                categoryName = backStackEntry.arguments?.getString("categoryName")
+                            )
+                        }
+                        composable(
+                            "province_city_list/{categoryName}/{provinceName}",
+                            arguments = listOf(
+                                navArgument("categoryName") { type = NavType.StringType },
+                                navArgument("provinceName") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            ProvinceCityListScreen(
+                                navController = navController,
+                                categoryName = backStackEntry.arguments?.getString("categoryName"),
+                                provinceName = backStackEntry.arguments?.getString("provinceName")
                             )
                         }
                         composable(

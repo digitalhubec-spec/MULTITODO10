@@ -2,7 +2,6 @@ package com.multitodo.app.screens
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,8 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
@@ -54,6 +53,7 @@ fun MainMenuScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         db.collection("formularios")
             .whereEqualTo("estado", "aprobado")
+            .orderBy("orden", Query.Direction.ASCENDING)
             .get()
             .addOnSuccessListener { documents ->
                 val list = documents.map { doc ->
@@ -64,6 +64,20 @@ fun MainMenuScreen(navController: NavController) {
                 // Filtrar favoritos
                 val favoriteIds = favoritesManager.getFavorites()
                 favoriteBusinesses = list.filter { it.id in favoriteIds }
+            }
+            .addOnFailureListener {
+                // Si falla por falta de índice, al menos cargamos sin orden para no romper la app
+                db.collection("formularios")
+                    .whereEqualTo("estado", "aprobado")
+                    .get()
+                    .addOnSuccessListener { documents ->
+                        val list = documents.map { doc ->
+                            doc.toObject<Formulario>().copy(id = doc.id)
+                        }
+                        allBusinesses = list
+                        val favoriteIds = favoritesManager.getFavorites()
+                        favoriteBusinesses = list.filter { it.id in favoriteIds }
+                    }
             }
     }
 

@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
@@ -60,11 +61,26 @@ fun ListingsScreen(navController: NavController, city: String?, category: String
                 .whereEqualTo("estado", "aprobado")
                 .whereEqualTo("categoria", category)
                 .whereEqualTo("especialidad", specialty)
+                .orderBy("orden", Query.Direction.ASCENDING)
                 .get()
                 .addOnSuccessListener { documents ->
                     businesses = documents.map { doc ->
                         doc.toObject<Formulario>().copy(id = doc.id)
                     }
+                }
+                .addOnFailureListener {
+                    // Fallback sin orden por si falta el índice compuesto en Firestore
+                    db.collection("formularios")
+                        .whereArrayContains("ciudades", city)
+                        .whereEqualTo("estado", "aprobado")
+                        .whereEqualTo("categoria", category)
+                        .whereEqualTo("especialidad", specialty)
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            businesses = documents.map { doc ->
+                                doc.toObject<Formulario>().copy(id = doc.id)
+                            }
+                        }
                 }
         }
     }

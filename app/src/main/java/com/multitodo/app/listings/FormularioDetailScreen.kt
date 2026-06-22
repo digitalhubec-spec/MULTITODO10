@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
@@ -44,6 +45,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 // Formato para WhatsApp (Sin +, sin espacios, con 593 al inicio)
 private fun formatForWhatsApp(phone: String): String {
@@ -168,22 +170,51 @@ fun FormularioDetailScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.Visibility, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Estadísticas de Tráfico", fontWeight = FontWeight.Bold)
+                                    Text("Panel de Administración", fontWeight = FontWeight.Bold)
                                 }
+                                
                                 Divider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.5f))
+
+                                // Información de Fecha y Tiempo
+                                val fechaRef = form.fechaAprobacion ?: form.timestamp
+                                if (fechaRef != null) {
+                                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                    val diff = Date().time - fechaRef.time
+                                    val days = TimeUnit.MILLISECONDS.toDays(diff)
+                                    
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Activo desde: ${sdf.format(fechaRef)} ($days días)",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = Color.DarkGray
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column {
-                                        Text("Hoy", style = MaterialTheme.typography.labelMedium)
-                                        Text("$visitasHoy visitas", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("Visitas Hoy", style = MaterialTheme.typography.labelMedium)
+                                        Text("$visitasHoy", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text("Total Histórico", style = MaterialTheme.typography.labelMedium)
-                                        Text("${form.visitasTotales} visitas", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text("${form.visitasTotales}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Prioridad en lista: ${form.orden}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
