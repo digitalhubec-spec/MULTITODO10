@@ -4,6 +4,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,9 +12,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.google.firebase.firestore.ktx.firestore
@@ -50,6 +54,7 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
     var instagramLink by remember { mutableStateOf("") }
     var tiktokLink by remember { mutableStateOf("") }
     var facebookLink by remember { mutableStateOf("") }
+    var websiteLink by remember { mutableStateOf("") }
 
     // Estados para imágenes
     var logoUri by remember { mutableStateOf<Uri?>(null) }
@@ -60,6 +65,7 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
     val mainCities = EcuadorData.ciudadesPrincipales
     val selectedMainCities = remember { mutableStateMapOf<String, Boolean>() }
     
+    val additionalCities = remember { mutableStateListOf<String>() }
     var showOtherLocations by remember { mutableStateOf(false) }
     var selectedProvincia by remember { mutableStateOf("") }
     var selectedCiudadOther by remember { mutableStateOf("") }
@@ -111,16 +117,44 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                             Text(city)
                         }
                     }
+
+                    if (additionalCities.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Ciudades Adicionales (Máx 2):", style = MaterialTheme.typography.titleSmall, color = Color.Gray)
+                        additionalCities.forEach { city ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(city, fontWeight = FontWeight.Medium)
+                                IconButton(onClick = { additionalCities.remove(city) }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Eliminar", modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        }
+                    }
                     
-                    TextButton(onClick = { showOtherLocations = !showOtherLocations }) {
-                        Text(if (showOtherLocations) "- Ocultar buscador de provincias" else "+ Buscar en otras provincias")
+                    if (additionalCities.size < 2) {
+                        TextButton(onClick = { showOtherLocations = !showOtherLocations }) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (showOtherLocations) "Ocultar buscador" else "Agregar ciudad de otra provincia")
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Has alcanzado el límite de ciudades adicionales", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     }
                 }
 
-                if (showOtherLocations) {
+                if (showOtherLocations && additionalCities.size < 2) {
                     item {
                         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Todas las provincias de Ecuador:", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text("Buscar en otras provincias:", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             
                             // Dropdown Provincia
                             ExposedDropdownMenuBox(
@@ -174,7 +208,14 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                                             DropdownMenuItem(
                                                 text = { Text(ciudad) },
                                                 onClick = {
-                                                    selectedCiudadOther = ciudad
+                                                    val cityToAdd = ciudad.uppercase()
+                                                    if (!additionalCities.contains(cityToAdd) && !mainCities.contains(cityToAdd)) {
+                                                        additionalCities.add(cityToAdd)
+                                                        selectedCiudadOther = ""
+                                                        showOtherLocations = false
+                                                    } else {
+                                                        Toast.makeText(context, "Esta ciudad ya está en tu lista", Toast.LENGTH_SHORT).show()
+                                                    }
                                                     ciudadExpanded = false
                                                 }
                                             )
@@ -237,7 +278,17 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                     OutlinedTextField(value = aboutMe, onValueChange = { aboutMe = it }, label = { Text("Descripción de servicios") }, modifier = Modifier.fillMaxWidth().height(120.dp))
                 }
 
-                item { Text("Redes Sociales (Opcional)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+                item { Text("Redes Sociales y Web (Opcional)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+                item { 
+                    OutlinedTextField(
+                        value = websiteLink, 
+                        onValueChange = { websiteLink = it }, 
+                        label = { Text("Sitio Web (Link)") }, 
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = { Icon(Icons.Default.Language, contentDescription = null) },
+                        placeholder = { Text("https://tuweb.com") }
+                    ) 
+                }
                 item { OutlinedTextField(value = instagramLink, onValueChange = { instagramLink = it }, label = { Text("Instagram (Usuario o Link)") }, modifier = Modifier.fillMaxWidth()) }
                 item { OutlinedTextField(value = tiktokLink, onValueChange = { tiktokLink = it }, label = { Text("TikTok (Usuario o Link)") }, modifier = Modifier.fillMaxWidth()) }
                 item { OutlinedTextField(value = facebookLink, onValueChange = { facebookLink = it }, label = { Text("Facebook (Link)") }, modifier = Modifier.fillMaxWidth()) }
@@ -247,9 +298,7 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                     Button(
                         onClick = {
                             val citiesList = selectedMainCities.filter { it.value }.keys.toMutableList()
-                            if (selectedCiudadOther.isNotBlank()) {
-                                citiesList.add(selectedCiudadOther.uppercase())
-                            }
+                            citiesList.addAll(additionalCities)
 
                             if (fullName.isBlank() || phone.isBlank()) {
                                 Toast.makeText(context, "Nombre y Teléfono son obligatorios", Toast.LENGTH_LONG).show()
@@ -295,6 +344,7 @@ fun ProfessionalFormScreen(navController: NavController, category: String?, spec
                                         "instagramLink" to instagramLink,
                                         "tiktokLink" to tiktokLink,
                                         "facebookLink" to facebookLink,
+                                        "websiteLink" to websiteLink,
                                         "visitasTotales" to 0L,
                                         "orden" to 0,
                                         "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp()

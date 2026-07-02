@@ -14,8 +14,8 @@ android {
         applicationId = "com.multitodo.app"
         minSdk = 24
         targetSdk = 35 // Mantenemos 35 para que funcione perfecto en Xiaomi 15 y otros actuales
-        versionCode = 34
-        versionName = "34.0"
+        versionCode = 35
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

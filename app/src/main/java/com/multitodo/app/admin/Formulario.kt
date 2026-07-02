@@ -20,6 +20,7 @@ data class Formulario(
     val instagramLink: String = "",
     val tiktokLink: String = "",
     val facebookLink: String = "",
+    val websiteLink: String = "", // Nuevo campo para sitio web
     val visitasTotales: Long = 0,
     val orden: Int = 0,
     val fechaAprobacion: Date? = null,

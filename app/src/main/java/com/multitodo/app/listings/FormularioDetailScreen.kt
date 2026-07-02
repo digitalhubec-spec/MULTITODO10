@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -347,14 +349,17 @@ fun FormularioDetailScreen(
                 
                 item { 
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (form.websiteLink.isNotBlank()) {
+                            SocialButton("Visitar Sitio Web", iconVector = Icons.Default.Language, url = buildSocialUrl(form.websiteLink, ""))
+                        }
                         if (form.instagramLink.isNotBlank()) {
-                            SocialButton("Instagram", R.drawable.instagram, buildSocialUrl(form.instagramLink, "https://www.instagram.com/"))
+                            SocialButton("Instagram", iconRes = R.drawable.instagram, url = buildSocialUrl(form.instagramLink, "https://www.instagram.com/"))
                         }
                         if (form.tiktokLink.isNotBlank()) {
-                            SocialButton("TikTok", R.drawable.tiktok, buildSocialUrl(form.tiktokLink, "https://www.tiktok.com/@"))
+                            SocialButton("TikTok", iconRes = R.drawable.tiktok, url = buildSocialUrl(form.tiktokLink, "https://www.tiktok.com/@"))
                         }
                         if (form.facebookLink.isNotBlank()) {
-                            SocialButton("Facebook", R.drawable.facebook, buildSocialUrl(form.facebookLink, "https://www.facebook.com/"))
+                            SocialButton("Facebook", iconRes = R.drawable.facebook, url = buildSocialUrl(form.facebookLink, "https://www.facebook.com/"))
                         }
                     }
                 }
@@ -364,7 +369,12 @@ fun FormularioDetailScreen(
 }
 
 @Composable
-fun SocialButton(label: String, iconRes: Int, url: String) {
+fun SocialButton(
+    label: String, 
+    iconRes: Int? = null, 
+    iconVector: ImageVector? = null, 
+    url: String
+) {
     val context = LocalContext.current
     OutlinedButton(
         onClick = {
@@ -378,7 +388,11 @@ fun SocialButton(label: String, iconRes: Int, url: String) {
         modifier = Modifier.fillMaxWidth(),
         border = BorderStroke(1.dp, Color.LightGray)
     ) {
-        Image(painter = painterResource(id = iconRes), contentDescription = null, modifier = Modifier.size(20.dp))
+        if (iconRes != null) {
+            Image(painter = painterResource(id = iconRes), contentDescription = null, modifier = Modifier.size(20.dp))
+        } else if (iconVector != null) {
+            Icon(iconVector, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        }
         Spacer(modifier = Modifier.width(12.dp))
         Text(label, color = Color.DarkGray)
     }
