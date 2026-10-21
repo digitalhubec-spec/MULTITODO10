@@ -9,6 +9,13 @@
 
 ---
 
+## 🎬 Videos de Demostración (App en Acción)
+Puedes ver los shorts de demostración del funcionamiento de la aplicación aquí:
+- 📱 [Demo 1 - Registro y Descarga](https://youtube.com/shorts/tHMXKUkhZy0?feature=share)
+- 🏥 [Demo 2 - Formar parte de la Hub](https://youtube.com/shorts/1uqRU8sNqoM?feature=share)
+
+---
+
 ## 🚀 Características Principales
 - **Exploración Jerárquica Dinámica:** Navegación fluida por provincias, ciudades, categorías y especialidades médicas.
 - **Directorio de Comercios y Farmacias (`MultiStore`):** Visualización de establecimientos locales de salud y comercio general.
@@ -39,10 +46,5 @@ El proyecto está desarrollado bajo estándares modernos de desarrollo Android:
 
 ---
 
-## 📱 Capturas de Pantalla / Vistas
-*(Agrega aquí capturas de pantalla de tu app en funcionamiento)*
-
----
-
 ## 👨‍💻 Autor
-Desarrollado con pasión e ingeniería por **[Tu Nombre]**.
+Desarrollado con pasión e ingeniería.
